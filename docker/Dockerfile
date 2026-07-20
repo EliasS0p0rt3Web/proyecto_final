@@ -1,0 +1,7 @@
+FROM postgres:16
+
+ENV POSTGRES_DB=db_clinica_franklin
+ENV POSTGRES_USER=root
+ENV POSTGRES_PASSWORD=root
+
+EXPOSE 5432
