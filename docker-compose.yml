@@ -1,0 +1,116 @@
+services:
+
+  postgres:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    container_name: ec3-postgres
+    environment:
+      POSTGRES_DB: db_clinica_franklin
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: on-failure
+
+  keycloak:
+    build:
+      context: ./docker/keycloak
+      dockerfile: Dockerfile
+    container_name: ec3-keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    restart: on-failure
+
+  ms-descubridor:
+    build:
+      context: .
+      dockerfile: ms-descubridor/Dockerfile
+    container_name: ms-descubridor
+    ports:
+      - "8761:8761"
+    restart: on-failure
+
+  ms-configserver:
+    build:
+      context: .
+      dockerfile: ms-configserver/Dockerfile
+    container_name: ms-configserver
+    ports:
+      - "8888:8888"
+    depends_on:
+      - ms-descubridor
+    restart: on-failure
+
+  ms-medico:
+    build:
+      context: .
+      dockerfile: ms-medico/Dockerfile
+    container_name: ms-medico
+    environment:
+      CONFIG_SERVER_URL: http://ms-configserver:8888/
+      DB_URL: jdbc:postgresql://postgres:5432/db_clinica_franklin
+      DB_USER: root
+      DB_PASSWORD: root
+      EUREKA_URL: http://ms-descubridor:8761/eureka/
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+      - ms-descubridor
+      - ms-configserver
+    restart: on-failure
+
+  ms-cita:
+    build:
+      context: .
+      dockerfile: ms-cita/Dockerfile
+    container_name: ms-cita
+    environment:
+      CONFIG_SERVER_URL: http://ms-configserver:8888/
+      DB_URL: jdbc:postgresql://postgres:5432/db_clinica_franklin
+      DB_USER: root
+      DB_PASSWORD: root
+      EUREKA_URL: http://ms-descubridor:8761/eureka/
+      MEDICO_URL: http://ms-medico:8083/api/v1/horarios-medicos
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+      - ms-descubridor
+      - ms-configserver
+      - ms-medico
+    restart: on-failure
+
+  demogw:
+    build:
+      context: .
+      dockerfile: demogw/Dockerfile
+    container_name: demogw
+    environment:
+      EUREKA_URL: http://ms-descubridor:8761/eureka/
+      MEDICO_URI: http://ms-medico:8083
+      CITA_URI: http://ms-cita:8084
+      KEYCLOAK_ISSUER_URI: http://localhost:8080/realms/spring-realm
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/spring-realm/protocol/openid-connect/certs
+    ports:
+      - "9090:9090"
+    depends_on:
+      - keycloak
+      - ms-descubridor
+      - ms-medico
+      - ms-cita
+    restart: on-failure
+
+volumes:
+  postgres_data:
