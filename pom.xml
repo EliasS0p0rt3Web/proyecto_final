@@ -23,6 +23,7 @@
     <modules>
         <module>ms-medico</module>
         <module>ms-cita</module>
+        <module>ms-descubridor</module>
     </modules>
 
     <dependencyManagement>
