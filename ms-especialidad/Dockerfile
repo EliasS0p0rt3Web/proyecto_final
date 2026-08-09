@@ -4,20 +4,20 @@ WORKDIR /workspace
 
 COPY pom.xml .
 
-COPY ms-paciente/pom.xml ms-paciente/pom.xml
+COPY ms-especialidad/pom.xml ms-especialidad/pom.xml
 
-RUN mvn -f ms-paciente/pom.xml dependency:go-offline
+RUN mvn -f ms-especialidad/pom.xml dependency:go-offline
 
-COPY ms-paciente/src ms-paciente/src
+COPY ms-especialidad/src ms-especialidad/src
 
-RUN mvn -f ms-paciente/pom.xml clean package -DskipTests
+RUN mvn -f ms-especialidad/pom.xml clean package -DskipTests
 
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-COPY --from=build /workspace/ms-paciente/target/*.jar app.jar
+COPY --from=build /workspace/ms-especialidad/target/*.jar app.jar
 
-EXPOSE 8085
+EXPOSE 8086
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
