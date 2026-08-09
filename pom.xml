@@ -25,6 +25,7 @@
         <module>ms-cita</module>
         <module>ms-paciente</module>
         <module>ms-especialidad</module>
+        <module>ms-notificacion</module>
         <module>ms-descubridor</module>
         <module>ms-configserver</module>
         <module>demogw</module>
