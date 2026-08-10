@@ -1,0 +1,598 @@
+openapi: 3.0.3
+
+info:
+  title: API - Sistema de Citas Médicas
+  version: 1.0.0
+  description: >
+    Contrato central de APIs para el sistema de citas médicas basado en microservicios.
+    Las rutas se publican a través del API Gateway.
+
+servers:
+  - url: http://localhost:9090
+    description: API Gateway local
+
+tags:
+  - name: Pacientes
+    description: Gestión de pacientes
+  - name: Especialidades
+    description: Gestión de especialidades médicas
+  - name: Médicos
+    description: Gestión de horarios y disponibilidad médica
+  - name: Citas
+    description: Agendamiento y consulta de citas médicas
+  - name: Notificaciones
+    description: Gestión de notificaciones de citas
+
+paths:
+
+  /ms-paciente/api/v1/pacientes:
+    post:
+      tags: [Pacientes]
+      summary: Registrar paciente
+      operationId: registrarPaciente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PacienteRequest'
+            example:
+              dni: "74125896"
+              nombres: "Juan"
+              apellidos: "Pérez"
+              telefono: "999888777"
+              email: "juan.perez@gmail.com"
+      responses:
+        '201':
+          description: Paciente registrado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PacienteResponse'
+        '400':
+          description: Datos de paciente inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Ya existe un paciente con el DNI indicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags: [Pacientes]
+      summary: Listar pacientes
+      operationId: listarPacientes
+      responses:
+        '200':
+          description: Lista de pacientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PacienteResponse'
+
+  /ms-paciente/api/v1/pacientes/{id}:
+    get:
+      tags: [Pacientes]
+      summary: Obtener paciente por ID
+      operationId: obtenerPacientePorId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Paciente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PacienteResponse'
+        '404':
+          description: Paciente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Pacientes]
+      summary: Actualizar paciente
+      operationId: actualizarPaciente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PacienteRequest'
+      responses:
+        '200':
+          description: Paciente actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PacienteResponse'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Paciente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: El DNI pertenece a otro paciente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ms-especialidad/api/v1/especialidades:
+    post:
+      tags: [Especialidades]
+      summary: Registrar especialidad
+      operationId: registrarEspecialidad
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EspecialidadRequest'
+            example:
+              nombre: "Cardiología"
+              descripcion: "Especialidad médica enfocada en enfermedades cardiovasculares"
+      responses:
+        '201':
+          description: Especialidad registrada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EspecialidadResponse'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: La especialidad ya está registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags: [Especialidades]
+      summary: Listar especialidades
+      operationId: listarEspecialidades
+      responses:
+        '200':
+          description: Lista de especialidades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EspecialidadResponse'
+
+  /ms-especialidad/api/v1/especialidades/{id}:
+    get:
+      tags: [Especialidades]
+      summary: Obtener especialidad por ID
+      operationId: obtenerEspecialidadPorId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Especialidad encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EspecialidadResponse'
+        '404':
+          description: Especialidad no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Especialidades]
+      summary: Actualizar especialidad
+      operationId: actualizarEspecialidad
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EspecialidadRequest'
+      responses:
+        '200':
+          description: Especialidad actualizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EspecialidadResponse'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Especialidad no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Ya existe otra especialidad con ese nombre
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ms-medico/api/v1/horarios-medicos/guardar:
+    post:
+      tags: [Médicos]
+      summary: Registrar horario médico
+      operationId: registrarHorarioMedico
+      description: >
+        Registra un horario disponible para un médico y valida que la especialidad exista.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HorarioRequest'
+            example:
+              colegiatura: "CMP001"
+              especialidadId: 1
+              turno: "09:00"
+      responses:
+        '200':
+          description: Horario médico registrado correctamente
+        '400':
+          description: Datos inválidos o especialidad inexistente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ms-medico/api/v1/horarios-medicos/validar-turno:
+    get:
+      tags: [Médicos]
+      summary: Validar disponibilidad de un médico
+      operationId: validarTurnoMedico
+      parameters:
+        - name: colegiatura
+          in: query
+          required: true
+          schema:
+            type: string
+          example: "CMP001"
+        - name: turno
+          in: query
+          required: true
+          schema:
+            type: string
+          example: "09:00"
+      responses:
+        '200':
+          description: Resultado de disponibilidad
+          content:
+            application/json:
+              schema:
+                type: boolean
+              example: true
+
+  /ms-cita/api/v1/agendamiento/confirmar:
+    post:
+      tags: [Citas]
+      summary: Confirmar cita médica
+      operationId: confirmarCita
+      description: >
+        Valida el paciente y la disponibilidad del médico, registra la cita
+        y genera una notificación de confirmación.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CitaRequest'
+            example:
+              pacienteId: 1
+              colegiaturaMedico: "CMP001"
+              turnoCita: "09:00"
+              costoConsulta: 100.0
+      responses:
+        '201':
+          description: Cita registrada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitaResponse'
+        '400':
+          description: Datos de cita inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Paciente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Médico sin disponibilidad
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ms-cita/api/v1/agendamiento/historial:
+    get:
+      tags: [Citas]
+      summary: Listar historial de citas
+      operationId: listarHistorialCitas
+      responses:
+        '200':
+          description: Historial de citas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CitaResponse'
+
+  /ms-notificacion/api/v1/notificaciones:
+    post:
+      tags: [Notificaciones]
+      summary: Registrar notificación
+      operationId: registrarNotificacion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificacionRequest'
+            example:
+              pacienteId: 1
+              citaId: 10
+              mensaje: "Su cita médica fue confirmada para el turno 09:00"
+              tipo: "CONFIRMACION"
+      responses:
+        '201':
+          description: Notificación registrada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacionResponse'
+        '400':
+          description: Datos de notificación inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags: [Notificaciones]
+      summary: Listar notificaciones
+      operationId: listarNotificaciones
+      responses:
+        '200':
+          description: Lista de notificaciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificacionResponse'
+
+  /ms-notificacion/api/v1/notificaciones/paciente/{pacienteId}:
+    get:
+      tags: [Notificaciones]
+      summary: Listar notificaciones de un paciente
+      operationId: listarNotificacionesPorPaciente
+      parameters:
+        - name: pacienteId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Notificaciones del paciente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificacionResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    PacienteRequest:
+      type: object
+      required: [dni, nombres, apellidos]
+      properties:
+        dni:
+          type: string
+          example: "74125896"
+        nombres:
+          type: string
+          example: "Juan"
+        apellidos:
+          type: string
+          example: "Pérez"
+        telefono:
+          type: string
+          example: "999888777"
+        email:
+          type: string
+          format: email
+          example: "juan.perez@gmail.com"
+
+    PacienteResponse:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int32
+              example: 1
+        - $ref: '#/components/schemas/PacienteRequest'
+
+    EspecialidadRequest:
+      type: object
+      required: [nombre]
+      properties:
+        nombre:
+          type: string
+          example: "Cardiología"
+        descripcion:
+          type: string
+          example: "Especialidad médica enfocada en enfermedades cardiovasculares"
+
+    EspecialidadResponse:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int32
+              example: 1
+        - $ref: '#/components/schemas/EspecialidadRequest'
+
+    HorarioRequest:
+      type: object
+      required: [colegiatura, especialidadId, turno]
+      properties:
+        colegiatura:
+          type: string
+          example: "CMP001"
+        especialidadId:
+          type: integer
+          format: int32
+          example: 1
+        turno:
+          type: string
+          example: "09:00"
+
+    CitaRequest:
+      type: object
+      required: [pacienteId, colegiaturaMedico, turnoCita, costoConsulta]
+      properties:
+        pacienteId:
+          type: integer
+          format: int32
+          example: 1
+        colegiaturaMedico:
+          type: string
+          example: "CMP001"
+        turnoCita:
+          type: string
+          example: "09:00"
+        costoConsulta:
+          type: number
+          format: double
+          minimum: 0.01
+          example: 100.0
+
+    CitaResponse:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int32
+              example: 10
+        - $ref: '#/components/schemas/CitaRequest'
+
+    NotificacionRequest:
+      type: object
+      required: [pacienteId, citaId, mensaje, tipo]
+      properties:
+        pacienteId:
+          type: integer
+          format: int32
+          example: 1
+        citaId:
+          type: integer
+          format: int32
+          example: 10
+        mensaje:
+          type: string
+          example: "Su cita médica fue confirmada para el turno 09:00"
+        tipo:
+          type: string
+          example: "CONFIRMACION"
+
+    NotificacionResponse:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int32
+              example: 1
+            fecha:
+              type: string
+              format: date-time
+              example: "2026-08-09T20:00:00"
+        - $ref: '#/components/schemas/NotificacionRequest'
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: "Not Found"
+        message:
+          type: string
+          example: "Recurso no encontrado"
+        path:
+          type: string
+          example: "/ms-paciente/api/v1/pacientes/99"
+
+security:
+  - bearerAuth: []

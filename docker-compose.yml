@@ -15,6 +15,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: on-failure
 
+
   keycloak:
     build:
       context: ./docker/keycloak
@@ -32,6 +33,7 @@ services:
       - "8080:8080"
     restart: on-failure
 
+
   ms-descubridor:
     build:
       context: .
@@ -40,6 +42,7 @@ services:
     ports:
       - "8761:8761"
     restart: on-failure
+
 
   ms-configserver:
     build:
@@ -52,24 +55,88 @@ services:
       - ms-descubridor
     restart: on-failure
 
+
+  ms-paciente:
+    build:
+      context: .
+      dockerfile: ms-paciente/Dockerfile
+    container_name: ms-paciente
+    environment:
+      CONFIG_SERVER_URL: "http://ms-configserver:8888/"
+      DB_URL: "jdbc:postgresql://postgres:5432/db_clinica_franklin"
+      DB_USER: root
+      DB_PASSWORD: root
+      EUREKA_URL: "http://ms-descubridor:8761/eureka/"
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres
+      - ms-descubridor
+      - ms-configserver
+    restart: on-failure
+
+
+  ms-especialidad:
+    build:
+      context: .
+      dockerfile: ms-especialidad/Dockerfile
+    container_name: ms-especialidad
+    environment:
+      CONFIG_SERVER_URL: "http://ms-configserver:8888/"
+      DB_URL: "jdbc:postgresql://postgres:5432/db_clinica_franklin"
+      DB_USER: root
+      DB_PASSWORD: root
+      EUREKA_URL: "http://ms-descubridor:8761/eureka/"
+    ports:
+      - "8086:8086"
+    depends_on:
+      - postgres
+      - ms-descubridor
+      - ms-configserver
+    restart: on-failure
+
+
+  ms-notificacion:
+    build:
+      context: .
+      dockerfile: ms-notificacion/Dockerfile
+    container_name: ms-notificacion
+    environment:
+      CONFIG_SERVER_URL: "http://ms-configserver:8888/"
+      DB_URL: "jdbc:postgresql://postgres:5432/db_clinica_franklin"
+      DB_USER: root
+      DB_PASSWORD: root
+      EUREKA_URL: "http://ms-descubridor:8761/eureka/"
+    ports:
+      - "8087:8087"
+    depends_on:
+      - postgres
+      - ms-descubridor
+      - ms-configserver
+    restart: on-failure
+
+
   ms-medico:
     build:
       context: .
       dockerfile: ms-medico/Dockerfile
     container_name: ms-medico
     environment:
-      CONFIG_SERVER_URL: http://ms-configserver:8888/
-      DB_URL: jdbc:postgresql://postgres:5432/db_clinica_franklin
+      CONFIG_SERVER_URL: "http://ms-configserver:8888/"
+      DB_URL: "jdbc:postgresql://postgres:5432/db_clinica_franklin"
       DB_USER: root
       DB_PASSWORD: root
-      EUREKA_URL: http://ms-descubridor:8761/eureka/
+      EUREKA_URL: "http://ms-descubridor:8761/eureka/"
+      ESPECIALIDAD_URL: "http://ms-especialidad:8086/api/v1/especialidades"
     ports:
       - "8083:8083"
     depends_on:
       - postgres
       - ms-descubridor
       - ms-configserver
+      - ms-especialidad
     restart: on-failure
+
 
   ms-cita:
     build:
@@ -77,12 +144,16 @@ services:
       dockerfile: ms-cita/Dockerfile
     container_name: ms-cita
     environment:
-      CONFIG_SERVER_URL: http://ms-configserver:8888/
-      DB_URL: jdbc:postgresql://postgres:5432/db_clinica_franklin
+      CONFIG_SERVER_URL: "http://ms-configserver:8888/"
+      DB_URL: "jdbc:postgresql://postgres:5432/db_clinica_franklin"
       DB_USER: root
       DB_PASSWORD: root
-      EUREKA_URL: http://ms-descubridor:8761/eureka/
-      MEDICO_URL: http://ms-medico:8083/api/v1/horarios-medicos
+      EUREKA_URL: "http://ms-descubridor:8761/eureka/"
+
+      MEDICO_URL: "http://ms-medico:8083/api/v1/horarios-medicos"
+      PACIENTE_URL: "http://ms-paciente:8085/api/v1/pacientes"
+      NOTIFICACION_URL: "http://ms-notificacion:8087/api/v1/notificaciones"
+
     ports:
       - "8084:8084"
     depends_on:
@@ -90,7 +161,10 @@ services:
       - ms-descubridor
       - ms-configserver
       - ms-medico
+      - ms-paciente
+      - ms-notificacion
     restart: on-failure
+
 
   demogw:
     build:
@@ -98,19 +172,31 @@ services:
       dockerfile: demogw/Dockerfile
     container_name: demogw
     environment:
-      EUREKA_URL: http://ms-descubridor:8761/eureka/
-      MEDICO_URI: http://ms-medico:8083
-      CITA_URI: http://ms-cita:8084
-      KEYCLOAK_ISSUER_URI: http://localhost:8080/realms/spring-realm
-      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/spring-realm/protocol/openid-connect/certs
+      EUREKA_URL: "http://ms-descubridor:8761/eureka/"
+
+      MEDICO_URI: "http://ms-medico:8083"
+      CITA_URI: "http://ms-cita:8084"
+      PACIENTE_URI: "http://ms-paciente:8085"
+      ESPECIALIDAD_URI: "http://ms-especialidad:8086"
+      NOTIFICACION_URI: "http://ms-notificacion:8087"
+
+      KEYCLOAK_ISSUER_URI: "http://localhost:8080/realms/spring-realm"
+      KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/spring-realm/protocol/openid-connect/certs"
+
     ports:
       - "9090:9090"
+
     depends_on:
       - keycloak
       - ms-descubridor
       - ms-medico
       - ms-cita
+      - ms-paciente
+      - ms-especialidad
+      - ms-notificacion
+
     restart: on-failure
+
 
 volumes:
   postgres_data:
